@@ -26,3 +26,10 @@ def test_date_default_to_today():
     """
     t = Transaction(amount = 25.50, description = "Lunch at cafe")
     assert t.transaction_date == date.today()
+
+def test_amount_zero_raises_error():
+    """
+    Test that amount of 0 raises a ValueError.
+    """
+    with pytest.raises(ValueError):
+        Transaction(amount = 0, description = "Freebie")
