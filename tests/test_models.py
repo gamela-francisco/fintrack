@@ -44,3 +44,10 @@ def test_description_empty_raises_error():
 
     with pytest.raises(ValueError, match="Description cannot be empty."):
         Transaction(amount = 10, description = "    ")
+
+def test_amount_non_numeric_raises_error():
+    """
+    Test that a non-numeric amount (e.g., string) raises a ValueError.
+    """
+    with pytest.raises(ValueError, match="Amount must be a number."):
+        Transaction(amount = "fifty", description = "Invalid amount")

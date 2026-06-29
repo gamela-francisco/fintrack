@@ -3,6 +3,9 @@ from datetime import date
 
 class Transaction:
     def __init__(self, amount, description, category="Uncategorised", transaction_date=None):
+        if not isinstance(amount, (int, float)):
+            raise ValueError("Amount must be a number.")
+
         if amount == 0:
             raise ValueError("Amount cannot be zero")
 
