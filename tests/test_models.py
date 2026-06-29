@@ -10,3 +10,10 @@ def test_valid_transaction():
 
     assert t.amount == 25.50
     assert t.description == "Lunch at cafe"
+
+def test_category_defaults_to_uncategorised():
+    """
+    Test that category defaults to 'Uncategorised' when not provided.
+    """
+    t = Transaction(amount = 25.50, description = "Lunch at cafe")
+    assert t.category == "Uncategorised"
