@@ -6,6 +6,9 @@ class Transaction:
         if amount == 0:
             raise ValueError("Amount cannot be zero")
 
+        if not description or not description.strip():
+            raise ValueError("Description cannot be empty.")
+
         self.amount = amount
         self.description = description
         self.category = category

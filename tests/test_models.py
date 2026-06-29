@@ -33,3 +33,14 @@ def test_amount_zero_raises_error():
     """
     with pytest.raises(ValueError):
         Transaction(amount = 0, description = "Freebie")
+
+
+def test_description_empty_raises_error():
+    """
+    Test that an empty description raises a ValueError.
+    """
+    with pytest.raises(ValueError, match="Description cannot be empty."):
+        Transaction(amount = 10, description = "")
+
+    with pytest.raises(ValueError, match="Description cannot be empty."):
+        Transaction(amount = 10, description = "    ")
