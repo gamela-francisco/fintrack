@@ -20,3 +20,12 @@ class Transaction:
             self.transaction_date = date.today()
         else:
             self.transaction_date = transaction_date
+
+    @property
+    def is_income(self):
+        return self.amount > 0
+
+    @property
+    def is_expense(self):
+        return self.amount < 0
+

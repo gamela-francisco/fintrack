@@ -51,3 +51,15 @@ def test_amount_non_numeric_raises_error():
     """
     with pytest.raises(ValueError, match="Amount must be a number."):
         Transaction(amount = "fifty", description = "Invalid amount")
+
+def test_income_expense_properties():
+    """
+    Test that is_income and is_expense correctly identifies positive/negative amounts
+    """
+    t1 = Transaction(amount = 100, description = "Salary")
+    assert t1.is_income == True
+    assert t1.is_expense == False
+
+    t2 = Transaction(amount = -50, description = "Grocery")
+    assert t2.is_income == False
+    assert t2.is_expense == True
