@@ -63,3 +63,5 @@ def test_income_expense_properties():
     t2 = Transaction(amount = -50, description = "Grocery")
     assert t2.is_income == False
     assert t2.is_expense == True
+
+
