@@ -1,6 +1,6 @@
 import csv
 from datetime import datetime
-from app.models import Transaction
+from v1_prototype import Transaction
 
 def save_transaction(transaction: Transaction) -> None:
     """

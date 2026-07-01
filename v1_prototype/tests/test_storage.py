@@ -1,8 +1,7 @@
 import os
-import pytest
 import csv
-from app.models import Transaction
-from app.storage import save_transaction
+from v1_prototype import Transaction
+from v1_prototype import save_transaction
 
 
 def test_save_transaction():
@@ -45,7 +44,7 @@ def test_load_transactions():
     save_transaction(t2)
 
     # Load them back
-    from app.storage import load_transactions
+    from v1_prototype import load_transactions
     transactions = load_transactions()
 
     assert len(transactions) == 2

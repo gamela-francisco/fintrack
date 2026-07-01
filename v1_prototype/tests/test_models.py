@@ -1,5 +1,5 @@
 import pytest
-from app.models import Transaction
+from v1_prototype import Transaction
 from datetime import date
 
 
