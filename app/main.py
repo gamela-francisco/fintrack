@@ -1,10 +1,23 @@
 from fastapi import FastAPI
 from typing import List
+
+from starlette.middleware.cors import CORSMiddleware
+
 from app.schemas import TransactionBase
 from app.storage import save_transaction, get_all_transactions
 
 # Initialise the FastAPI application instance
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Allows any website to make requests to this backend
+    allow_credentials=True,
+    allow_methods=["*"], # Allows GET, POST, OPTIONS, etc.
+    allow_headers=["*"], # Allow any headers
+)
+
+
 
 # We use this decorator to map HTTP GET requests sent to the root URL ("/")
 # directly to the function defined immediately below it.
