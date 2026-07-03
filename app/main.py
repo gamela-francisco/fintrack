@@ -4,10 +4,10 @@ from typing import List
 from starlette.middleware.cors import CORSMiddleware
 
 from app.schemas import TransactionBase
-from app.storage import save_transaction, get_all_transactions
 
 from contextlib import asynccontextmanager
 from app.database import init_db
+from app.database import get_db_connection
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,40 +31,55 @@ app.add_middleware(
 )
 
 
-
-# We use this decorator to map HTTP GET requests sent to the root URL ("/")
-# directly to the function defined immediately below it.
-@app.get("/")
-def read_root() -> dict:
+@app.get("/transactions")
+def read_all_transactions() -> List[dict]:
     """
-    Health check endpoint that returns a simple welcome message.
-
-    This allows clients or deployment platforms to verify that the backend
-    server is up and running correctly.
+    Endpoint to retrieve all financial transactions from the SQLite database.
     """
-    return {"message": "Welcome to FinTrack API"}
+    # Open connection pipe
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # execute the SQL command to grab everything
+    cursor.execute("SELECT * FROM transactions;")
+    rows = cursor.fetchall()
+    conn.close()
+
+    # Convert the SQLite row objects into clean Python dictionaries
+    # Because of conn.row_factory = sqlite3.Row, then we can loop through and do dict(row)
+    transactions_list = [dict(row) for row in rows]
+
+    return transactions_list
 
 @app.post("/transactions")
 def create_transaction(transaction: TransactionBase) -> dict:
     """
-    Endpoint to log a new financial  transaction.
-
-    1. Receives data matching the TransactionBase schema.
-    2. The Pydantic 'bouncer' automatically validates it.
-    3. Converts the valid schema object to a standard Python dictionary.
-    4. Passes it to storage to be assigned an ID and saved.
+    Endpoint to log a new financial  transaction into the SQLite database.
     """
-    # Convert Pydantic object to dictionary
-    transaction_dict = transaction.model_dump()
+    # open connection pipe to the database file
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    # Saving it using storage layer
-    saved_record = save_transaction(transaction_dict)
+    safe_amount = float(transaction.amount)
 
-    return saved_record
+    # execute the SQL command to insert our data rows securely
+    cursor.execute("""
+        INSERT INTO transactions (amount, description, category, date)
+        VALUES (?, ?, ?, ?);
+    """, (safe_amount, transaction.description, transaction.category, transaction.date))
 
-@app.get("/transactions")
-def read_all_transactions() -> List[dict]:
-    """
-    Endpoint to retrieve all financial transactions.
-    """
-    return get_all_transactions()
+    # commit saves the row, and cursor.lastrowid grabs the new ID assigned by SQLite
+    conn.commit()
+    new_id = cursor.lastrowid
+    conn.close()
+
+    # return the exact saved record object back to the frontend
+    return {
+        "id": new_id,
+        "amount": safe_amount,
+        "description": transaction.description,
+        "category": transaction.category,
+        "date": transaction.date
+    }
+
+
