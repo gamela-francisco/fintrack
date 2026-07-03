@@ -6,8 +6,21 @@ from starlette.middleware.cors import CORSMiddleware
 from app.schemas import TransactionBase
 from app.storage import save_transaction, get_all_transactions
 
-# Initialise the FastAPI application instance
-app = FastAPI()
+from contextlib import asynccontextmanager
+from app.database import init_db
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # This block runs BEFORE the server starts accepting requests
+    print("Initialising SQLite Database...")
+    init_db()
+    yield
+    # Anything after the 'yield' would run when the server shuts down
+
+# Pass the lifespan manager  into your FastAPI application
+app = FastAPI(lifespan=lifespan)
+
+
 
 app.add_middleware(
     CORSMiddleware,
