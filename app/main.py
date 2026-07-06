@@ -81,5 +81,21 @@ def create_transaction(transaction: TransactionBase) -> dict:
         "category": transaction.category,
         "date": transaction.date
     }
+@app.delete("/transactions/{transaction_id}")
+def delete_transaction(transaction_id: int) -> dict:
+    """
+    Endpoint to permanently remove a financial transaction from the SQLite database.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # execute the SQL delete command targeting the unique ID
+    cursor.execute("DELETE FROM transactions WHERE id = ?;", (transaction_id,))
+
+    conn.commit()
+    conn.close()
+
+    return {"message": f"Transaction {transaction_id} successfully deleted"}
+
 
 
