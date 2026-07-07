@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from typing import List
 
 from starlette.middleware.cors import CORSMiddleware
@@ -81,6 +81,7 @@ def create_transaction(transaction: TransactionBase) -> dict:
         "category": transaction.category,
         "date": transaction.date
     }
+
 @app.delete("/transactions/{transaction_id}")
 def delete_transaction(transaction_id: int) -> dict:
     """
@@ -97,5 +98,33 @@ def delete_transaction(transaction_id: int) -> dict:
 
     return {"message": f"Transaction {transaction_id} successfully deleted"}
 
+@app.put("/transactions/{transaction_id}")
+def update_transaction(transaction_id: int, updated_tx: TransactionBase) -> dict:
+    """
+    Endpoint to modify an existing transaction's details inside the SQLite database.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
+    # Step A: Check if the transaction actually exists first
+    cursor.execute("SELECT id FROM transactions WHERE id = ?;", (transaction_id,))
+    if cursor.fetchone() is None:
+        conn.close()
+        # FastAPI automatically handles HTTP exceptions elegantly
+        raise HTTPException(status_code=404, detail="Transaction not found")
 
+    # Step B: Execute the SQL UPDATE command
+    # We explicitly convert the Pydantic Decimal to a float to prevent driver binding errors
+    cursor.execute(
+        """
+        UPDATE transactions 
+        SET amount = ?, description = ?, category = ?, date = ?
+        WHERE id = ?;
+        """,
+        (float(updated_tx.amount), updated_tx.description, updated_tx.category, updated_tx.date, transaction_id)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return {"message": f"Transaction {transaction_id} successfully updated"}
