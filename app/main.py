@@ -30,6 +30,37 @@ app.add_middleware(
     allow_headers=["*"], # Allow any headers
 )
 
+@app.get("/transactions/summary")
+def get_financial_summary() -> dict:
+    """
+    Executes high-performance SQL aggregation functions to compute
+    Total Income, Total Expenses, and Net Balance directly on the hard drive
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Query 1: Calculate Total Income (All positive numbers)
+    cursor.execute("SELECT SUM(amount) FROM transactions WHERE amount > 0;")
+    income_row = cursor.fetchone()
+    # defensive check - if database has no rows, default to 0.0
+    total_income = income_row[0] if income_row[0] is not None else 0.0
+
+    # Query 2: Calculate Total Expenses (All negative numbers)
+    cursor.execute("SELECT SUM(amount) FROM transactions WHERE amount < 0;")
+    expense_row = cursor.fetchone()
+    total_expenses = expense_row[0] if expense_row[0] is not None else 0.0
+
+    conn.close()
+
+    net_balance = total_income + total_expenses
+
+    return {
+        "total_income" : round(total_income, 2),
+        "total_expenses": round(total_expenses, 2),
+        "net_balance": round(net_balance, 2)
+    }
+
+
 
 @app.get("/transactions")
 def read_all_transactions() -> List[dict]:
