@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from typing import List
+from typing import List, Optional  # Ensure Optional is imported at the top
 
 from starlette.middleware.cors import CORSMiddleware
 
@@ -63,25 +64,35 @@ def get_financial_summary() -> dict:
 
 
 @app.get("/transactions")
-def read_all_transactions() -> List[dict]:
+def read_all_transactions(search: Optional[str] = None, category: Optional[str] = None) -> List[dict]:
     """
-    Endpoint to retrieve all financial transactions from the SQLite database.
+    Retrieves transactions from the database, equipped with dynamic,
+    case-insensitive search pattern matching and category filtering.
     """
-    # Open connection pipe
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # execute the SQL command to grab everything
-    cursor.execute("SELECT * FROM transactions;")
+    # The '1=1' base trick allows us to cleanly append dynamic filters
+    query = "SELECT * FROM transactions WHERE 1=1"
+    params = []
+
+    # If the user typed something into the search bar
+    if search:
+        query += " AND LOWER(description) LIKE LOWER(?)"
+        params.append(f"%{search}%")  # The '%' wildcards mean "contains this text"
+
+    # If the user selected or passed a specific category filter
+    if category:
+        query += " AND LOWER(category) = LOWER(?)"
+        params.append(category)
+
+    query += ";"
+
+    cursor.execute(query, params)
     rows = cursor.fetchall()
     conn.close()
 
-    # Convert the SQLite row objects into clean Python dictionaries
-    # Because of conn.row_factory = sqlite3.Row, then we can loop through and do dict(row)
-    transactions_list = [dict(row) for row in rows]
-
-    return transactions_list
-
+    return [dict(row) for row in rows]
 @app.post("/transactions")
 def create_transaction(transaction: TransactionBase) -> dict:
     """
