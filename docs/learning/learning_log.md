@@ -13,3 +13,8 @@ as a check that I actually understand what I built.
 
 ## 2026-07-20 — Light review
 - Reread baseline audit, let the gap list sit before starting Week 1.
+
+## 2026-07-21
+- confirmed 404/405/422 distinctions hands-on. Minor mix-up: tested wrong path (/item vs /items) but it accidentally 
+confirmed 422 behavior on a real route I'd forgotten I registered. Good reminder to check actual code, not memory, 
+when debugging.
