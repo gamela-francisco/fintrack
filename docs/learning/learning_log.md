@@ -1,8 +1,10 @@
 # FinTrack Learning Log
+
 Weekly teach-back log — each entry written from memory, no notes, no AI,
 as a check that I actually understand what I built.
 
-## 2026-07-16 — Baseline audit (logged 2026-07-20)
+## Week 1
+### 2026-07-16 — Baseline audit (logged 2026-07-20)
 - Backend gaps identified: read_all_transactions, update_transaction,
   lifespan, get_db_connection (all SQL/async — matches Week 1 and Week 4)
 - Frontend: functional, deep understanding deferred until backend
@@ -11,10 +13,84 @@ as a check that I actually understand what I built.
 - Categorisation: not yet built. Belongs to Phase 2 (Anthropic API
   integration), after Ground Zero Curriculum.
 
-## 2026-07-20 — Light review
+### 2026-07-20 — Light review
 - Reread baseline audit, let the gap list sit before starting Week 1.
 
-## 2026-07-21
+### 2026-07-21
 - confirmed 404/405/422 distinctions hands-on. Minor mix-up: tested wrong path (/item vs /items) but it accidentally 
 confirmed 422 behavior on a real route I'd forgotten I registered. Good reminder to check actual code, not memory, 
 when debugging.
+
+### 2026-07-22 - Week 1, Wednesday: connecting HTTP to FinTrack
+- Question for next week note: Why doesn't read_all_transactions use async? Noticed no await inside it - is that 
+intentional or a gap? Revisit in week 2
+- Wrote "why this endpoint exists" sentences for read_all_transactions and get_db_connection
+- Learned: object.method() vs object.attribute = value distinction, via row factory
+- row_factory: makes fetchall()/fetchone() return dict-like Row objects instead of bare tuples, so columns are accessed 
+by name(row["amount"]) not position (row[1])
+
+### 2026-07-23 - Week 1, Thursday: comparing understanding, lifespan
+- lifespan (@asynccontextmanager): code before yield runs once at startup, code after yield runs once at shutdown - NOT
+per-request. Corrected my own initial mix-up here (thought "after-yield" ran per-request - it doesn't, route functions 
+handle per-request logic separately).
+- app = FastApi(lifespan=lifespan) is what actually wires the functions the function in - without it, lifespan would be 
+defined but never called.
+- CORS middleware noted but not deep-dived - allows frontend (different origin) to talk to backend. allow_origins=["*"]
+fine for local dev, flagged as a real security setting to tighten before deployment.
+- get_financial_summary: SUM() is a SQL aggregate function - collapses many rows into one computed value, calculated
+inside SQLite itself (faster than looping in Python). Because the query produces exactly ome row with one (unnamed) 
+column, fetchone() + positional [0] access is the natural fit - contrasts with read_all_transactions'  SELECT *, which
+produces many named rows, naturally pairing with fetchall() + row_factory's dict-style access
+- update_transaction: SQL's UPDATE silently affects zero rows if the WHERE clause matches nothing - no error, no new row,
+just does nothing. Without Step A's existence check, the endpoint would return a false "success" message for an update that
+never happened. Same category of bug as the earlier list-index-as-identity flaw: a request that appears to succeed while
+silently not doing what the client thinks it did.
+- HTTPException: not a database error - used when the query itself succeeds but the situation is still wrong from a 
+business-logic standpoint. Converts directly into a real HTTP status code + JSON body for the client.
+
+### 2026-07-24 - Week 1, Friday: teach-back + environment debugging
+**First teach-bag attempt (out loud, no notes):**
+- fumbled: request/response definitions, path+method matching, lifespan
+- solid: error codes(404, 405, 422)
+- result: did not pass - repeated targeted sections rather than full week
+
+**Environment detour - venv relocation bug:**
+- Server wouldn't start after Monday's repo restructure. Root cause:
+  venvs hardcode their own absolute path at creation time. Moving/renaming
+  the containing folder breaks activation silently — prompt shows (venv)
+  and $VIRTUAL_ENV looks set, but points to the old, now-wrong path.
+- Fix: delete and recreate the venv fresh at its current location — don't
+  try to repair a moved venv.
+- Also reinforced from Tuesday: `python3 -m <tool>` bypasses PATH lookup
+  and forces resolution through the currently active Python, which is why
+  it's the reliable fix when a CLI command misbehaves inside a venv.
+- New tool notes: `-m` in `python3 -m fastapi dev` = run as a module,
+  not a PATH-resolved command. `-i` in curl = include response headers
+  in output, not just the body. curl is a general-purpose HTTP client,
+  unrelated to FastAPI — it just sends raw requests to any server.
+
+**Second teach-back attempt (after re-running live examples):**
+- Ran curl against real FinTrack data (GET /transactions), correctly
+  named status line, headers, body from raw output.
+- Re-ran 404/405/422 examples live, cold — explained correctly.
+- Full teach-back: request/response anatomy, 422, and lifespan landed
+  clean. Two corrections needed:
+  1. Endpoint = path + method together, not just a path — this is
+     precisely why 405 exists as distinct from 404.
+  2. 404 = path doesn't exist at all (method isn't even checked yet).
+     405 = path exists, but that specific method isn't registered for it.
+     Had these backwards on the first pass.
+- Third pass, corrected: clean.
+
+**Week 1: PASSED.**
+
+**Open question carried to Week 2:** why does read_all_transactions have
+no async/await? No I/O actually awaited inside it — intentional, or a gap?
+Revisit once event loop mechanics are covered.
+
+**Interview-likely topics flagged this week:**
+- 404 vs 405 vs 422 — precise distinction, not just "an error happened"
+- Why HTTPException differs from a raw Python exception
+- update_transaction's existence-check: SQL UPDATE silently affects zero
+  rows on a non-matching WHERE — without the check, a bad ID gets a false
+  "success" response instead of an honest error 
