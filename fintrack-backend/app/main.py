@@ -93,6 +93,8 @@ def read_all_transactions(search: Optional[str] = None, category: Optional[str] 
     conn.close()
 
     return [dict(row) for row in rows]
+
+
 @app.post("/transactions")
 def create_transaction(transaction: TransactionBase) -> dict:
     """
