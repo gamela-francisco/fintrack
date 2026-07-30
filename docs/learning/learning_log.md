@@ -94,3 +94,17 @@ Revisit once event loop mechanics are covered.
 - update_transaction's existence-check: SQL UPDATE silently affects zero
   rows on a non-matching WHERE — without the check, a bad ID gets a false
   "success" response instead of an honest error 
+
+## 2026-07-30 — Week 2, event loop + resolving the read_all_transactions question
+- Event loop (JS): Web APIs (browser-provided, not JS itself) handle slow
+  tasks off the main thread. Completed tasks go to the task queue. Event
+  loop moves them to the call stack once it's empty. JS itself stays
+  single-threaded throughout — the waiting happens outside JS entirely.
+- Resolved open question: read_all_transactions has no async/await because
+  (1) practically, local SQLite disk I/O is fast enough that blocking
+  rarely matters, and (2) technically, Python's built-in sqlite3 module
+  doesn't support async at all — would need aiosqlite or similar.
+- Forward note: this decision must be revisited in Phase 2. Once migrated
+  to PostgreSQL (a real network call, especially once deployed on Railway),
+  async becomes the correct choice, not just a nice-to-have — likely via
+  asyncpg or SQLAlchemy's async support.
