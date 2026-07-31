@@ -108,3 +108,22 @@ Revisit once event loop mechanics are covered.
   to PostgreSQL (a real network call, especially once deployed on Railway),
   async becomes the correct choice, not just a nice-to-have — likely via
   asyncpg or SQLAlchemy's async support.
+
+## 2026-07-31 — Week 2 add FastAPI def vs async def notes, resolve event loop follow-up, teach back
+- FastAPI def vs async def: plain def endpoints run in a separate thread
+  pool automatically — a safety net FastAPI provides because it can't
+  trust a sync function not to block. async def endpoints run directly
+  on the event loop, no safety net — FastAPI trusts the dev to await
+  everything slow correctly inside it. Risk: async def + an unawaited
+  blocking call freezes the entire server for all requests, not just
+  that one — worse than plain def, which is protected either way.
+- Forward note for Phase 2: Anthropic API calls are exactly the kind of
+  slow, external operation async/await exists for. Check if Anthropic's
+  SDK has an async client, and if the categorisation endpoint is async
+  def, make sure the call is properly awaited.
+- Full teach-back, out loud, no notes: event loop, Web APIs, task queue,
+  def vs async def, and why read_all_transactions doesn't need async.
+- Passed cleanly, first attempt. One precision note: sqlite3 not
+  supporting async is the hard technical reason; "overkill" is secondary
+  practical color, not the primary reason.
+- Week 2: PASSED.
