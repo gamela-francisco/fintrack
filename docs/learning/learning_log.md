@@ -127,3 +127,12 @@ Revisit once event loop mechanics are covered.
   supporting async is the hard technical reason; "overkill" is secondary
   practical color, not the primary reason.
 - Week 2: PASSED.
+
+## 2026-08-05 — Week 3, Tuesday: Pydantic first exposure
+- Pydantic checks shape and type of incoming request body data, before
+  the endpoint function runs at all. Invalid data → FastAPI raises 422
+  automatically (connects directly to Week 1's understanding of what 422
+  actually means).
+- Correction: Pydantic doesn't just validate — it also converts where
+  reasonable (e.g. "50" string → 50.0 float). Only fails when conversion
+  genuinely isn't possible (e.g. "fifty" can't become a number).
