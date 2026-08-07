@@ -136,3 +136,25 @@ Revisit once event loop mechanics are covered.
 - Correction: Pydantic doesn't just validate — it also converts where
   reasonable (e.g. "50" string → 50.0 float). Only fails when conversion
   genuinely isn't possible (e.g. "fifty" can't become a number).
+
+## 2026-08-07 — Week 3, schema rebuild
+- Rebuilt TransactionBase using Decimal for amount (not float) — avoids
+  float rounding errors at the validation boundary. Correct reasoning,
+  but connects to a real design tension: create_transaction/update_transaction
+  explicitly convert to float() before hitting SQLite, because SQLite has
+  no native Decimal storage class (only NULL/INTEGER/REAL/TEXT/BLOB) —
+  so precision protection at validation is partially undone at storage.
+  Real systems often store money as integer cents to sidestep this
+  entirely (not implementing now, just noting it exists).
+- Date format consistency: without a fixed format (e.g. YYYY-MM-DD),
+  SQLite compares date strings alphabetically, not chronologically —
+  produces silently wrong filter/sort results, no error thrown. Same
+  bug family as update_transaction's silent-failure risk from Week 1:
+  no crash doesn't mean no bug.
+- Break 2 (wrong type): sent amount as a string "not-a-number" against a
+  Decimal field. Error type: "decimal_parsing" — not a generic ValueError,
+  Pydantic's error types are specific to the exact type being validated
+  against (would've been "float_parsing" if the field were float instead).
+  Confirms error type reflects the schema's own type choices, not a
+  generic catch-all.
+- Week 3 (Wed/Thu tasks): completed in one session, 7 Aug.
