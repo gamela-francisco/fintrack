@@ -158,3 +158,13 @@ Revisit once event loop mechanics are covered.
   Confirms error type reflects the schema's own type choices, not a
   generic catch-all.
 - Week 3 (Wed/Thu tasks): completed in one session, 7 Aug.
+
+## 2026-08-17 — Week 3 teach-back (delayed by camp, 10 days post-material)
+- Full teach-back, out loud, no notes, cold after camp gap.
+- Covered: Pydantic type-hint validation running before endpoint execution,
+  missing-field 422 example, decimal_parsing example, and the Decimal-vs-
+  float storage-layer conversion tension.
+- Passed cleanly. Notably stronger than the material felt on 7 Aug —
+  the gap (including camp, zero contact) is good evidence this is real
+  ownership, not short-term recall.
+- Week 3: PASSED.
