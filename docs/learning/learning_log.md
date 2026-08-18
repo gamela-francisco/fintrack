@@ -168,3 +168,17 @@ Revisit once event loop mechanics are covered.
   the gap (including camp, zero contact) is good evidence this is real
   ownership, not short-term recall.
 - Week 3: PASSED.
+
+## 2026-08-18 — Week 4, Tuesday: SQL injection first exposure
+- Keyword-blocking (DROP, DELETE, etc.) is not real defense — attackers
+  can't be fully anticipated, infinite variation possible.
+- Real defense: parametrized queries. Query structure and user input are
+  sent to the database SEPARATELY, not glued into one string. Database
+  compiles the query shape first (e.g. WHERE id = ?), then substitutes
+  the value in afterward as a literal — never as executable syntax.
+- Unsafe (string concatenation): entire query built as one string before
+  reaching the database — by the time it arrives, database can't tell
+  what was originally user input vs. code you wrote.
+- Confirmed: my own delete_transaction, update_transaction, etc. already
+  use parametrization correctly — this week is understanding *why* what
+  I already have is safe, not fixing something broken.
