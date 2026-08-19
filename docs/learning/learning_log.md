@@ -195,3 +195,15 @@ Revisit once event loop mechanics are covered.
   to search for. No match found, correctly returned empty.
 - Same attack, opposite outcomes — purely a function of how query and
   data were combined, confirming Tuesday's mechanism firsthand.
+- Verified read_all_transactions specifically (the dynamic query-building
+  case, flagged as highest injection risk since query is built piece by
+  piece). Confirmed: query string only ever gets static text appended
+  (" AND LOWER(...) LIKE LOWER(?)") — the ? never touches user input
+  directly. params.append(f"%{search}%") uses an f-string, but only to
+  build a VALUE, not the query structure — that value still flows through
+  the safe cursor.execute(query, params) parametrized channel.
+- Key distinction: f-strings/concatenation aren't dangerous by default —
+  only when used to build query STRUCTURE. Building a value that still
+  passes through ?/params separately is safe. Confirmed all four
+  endpoints (read_all_transactions, create_transaction, delete_transaction,
+  update_transaction) are genuinely parametrized, not just assumed.
