@@ -182,3 +182,16 @@ Revisit once event loop mechanics are covered.
 - Confirmed: my own delete_transaction, update_transaction, etc. already
   use parametrization correctly — this week is understanding *why* what
   I already have is safe, not fixing something broken.
+
+## 2026-08-19 — Week 4, Wednesday: injection demo, hands-on
+- Built vulnerable_login (string concatenation) and safe_login
+  (parametrized) in scratch/injection_test.py, using ' OR '1'='1'
+  as the attack input against both.
+- vulnerable_login: attack input got glued into the query string itself,
+  turning WHERE username = '' OR '1'='1' into an always-true condition —
+  returned every row in the table (full password dump).
+- safe_login: same attack input, but sent separately from the query
+  structure via parametrization — treated as one literal string value
+  to search for. No match found, correctly returned empty.
+- Same attack, opposite outcomes — purely a function of how query and
+  data were combined, confirming Tuesday's mechanism firsthand.
