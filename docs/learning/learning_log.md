@@ -207,3 +207,21 @@ Revisit once event loop mechanics are covered.
   passes through ?/params separately is safe. Confirmed all four
   endpoints (read_all_transactions, create_transaction, delete_transaction,
   update_transaction) are genuinely parametrized, not just assumed.
+
+## 2026-08-20 — Week 4, Thursday: schema rebuild and comparison
+- Rebuilt CREATE TABLE from reasoning: id (INTEGER PRIMARY KEY AUTOINCREMENT),
+  amount (REAL — SQLite has no Decimal), description (TEXT), category
+  (TEXT), date (TEXT — no native date type, connects to Tuesday's point
+  on format consistency for correct chronological sorting). All NOT NULL.
+  No foreign keys — single table currently.
+- Corrected two gaps found by comparing against real init_db():
+  1. IF NOT EXISTS — not just "avoids duplication." Without it, init_db()
+     (which runs on every server startup via lifespan) would throw
+     sqlite3.OperationalError and CRASH the server on every restart after
+     the first, since the table already exists from the previous run.
+  2. Triple quotes ("""..."""): do NOT mean "this is code" vs regular
+     quotes meaning "this is structure" — that was wrong. Triple quotes
+     are purely a readability choice, allowing a string to span multiple
+     lines. CREATE TABLE uses them because it has many columns/lines;
+     DELETE stays single-quoted because it fits on one line. Zero effect
+     on execution or safety either way.
