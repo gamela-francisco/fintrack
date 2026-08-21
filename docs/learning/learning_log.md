@@ -225,3 +225,21 @@ Revisit once event loop mechanics are covered.
      lines. CREATE TABLE uses them because it has many columns/lines;
      DELETE stays single-quoted because it fits on one line. Zero effect
      on execution or safety either way.
+
+
+## 2026-08-21 — Week 4 teach-back
+- Full teach-back, out loud, no notes: code vs data distinction, why
+  keyword-blocking fails, ' OR '1'='1' mechanism with concrete
+  consequence (full data exposure), parametrized query mechanism
+  (separate transmission, structure compiled first, value substituted
+  as literal).
+- Passed cleanly, first attempt. Strongest teach-back so far — fully
+  grounded in hands-on demo (vulnerable_login/safe_login) rather than
+  just recalled reading.
+- Week 4: PASSED.
+
+## Ground Zero Curriculum — Weeks 1-4 complete
+All four weeks passed. Real gaps corrected along the way: 404/405
+confusion, event loop mechanics, Decimal/float storage tension, date
+format consistency, IF NOT EXISTS crash prevention, triple-quote
+misconception. Ready for Week 5 full rebuild.
