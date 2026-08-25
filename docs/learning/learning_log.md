@@ -243,3 +243,21 @@ All four weeks passed. Real gaps corrected along the way: 404/405
 confusion, event loop mechanics, Decimal/float storage tension, date
 format consistency, IF NOT EXISTS crash prevention, triple-quote
 misconception. Ready for Week 5 full rebuild.
+
+## 2026-08-25 — Week 5, Day 1: rebuilding lifespan from memory
+- Rebuilt lifespan + FastAPI app wiring from memory, checked syntax
+  against official docs (not my own code) — correctly distinguished
+  my init_db() as one-time setup, NOT a shared connection pool like
+  the docs' example (each endpoint opens its own fresh connection via
+  get_db_connection(), lifespan just guarantees the table exists first).
+- Caught my own bug: imported `from app import database` but called
+  bare init_db() — would raise NameError. Fixed via importing the function
+  by name.
+- Raised own question: should init_db() be wrapped in try/except?
+  Reasoned through it: catching-and-swallowing (Option 2) is dangerous —
+  server starts looking healthy, then fails confusingly later on the
+  first real request with a table-not-found error, far from the real
+  cause. Catching-log-then-RE-RAISE (Option 1) is good practice —
+  better diagnostics, same fail-fast behavior preserved.
+- Principle: no point starting a server that can't fulfill requests —
+  fail loudly and immediately beats failing silently and later.
