@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from typing import List
 from typing import List, Optional  # Ensure Optional is imported at the top
-
+from datetime import date
 from starlette.middleware.cors import CORSMiddleware
 
 from app.schemas import TransactionBase
@@ -105,12 +105,13 @@ def create_transaction(transaction: TransactionBase) -> dict:
     cursor = conn.cursor()
 
     safe_amount = float(transaction.amount)
+    safe_date = transaction.date.isoformat
 
     # execute the SQL command to insert our data rows securely
     cursor.execute("""
         INSERT INTO transactions (amount, description, category, date)
         VALUES (?, ?, ?, ?);
-    """, (safe_amount, transaction.description, transaction.category, transaction.date))
+    """, (safe_amount, transaction.description, transaction.category, safe_date))
 
     # commit saves the row, and cursor.lastrowid grabs the new ID assigned by SQLite
     conn.commit()

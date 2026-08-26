@@ -279,3 +279,10 @@ misconception. Ready for Week 5 full rebuild.
   different questions. Match documented convention even when an
   alternative technically works — consistency across a codebase matters
   more than what's minimally sufficient for one specific case.
+- Date-to-string conversion before database storage: chose
+  transaction.date.isoformat() over str(transaction.date). Tested both —
+  currently identical output ("2026-08-26"), but isoformat() is explicit
+  and purpose-built for this exact conversion, while str() relies on
+  date's __str__ implementation happening to match ISO format — not
+  guaranteed by the method's name or documented intent. Same
+  layer-conversion pattern as float(transaction.amount).
