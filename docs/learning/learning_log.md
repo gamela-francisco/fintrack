@@ -261,3 +261,21 @@ misconception. Ready for Week 5 full rebuild.
   better diagnostics, same fail-fast behavior preserved.
 - Principle: no point starting a server that can't fulfill requests —
   fail loudly and immediately beats failing silently and later.
+
+## 2026-08-26 — Week 5, Day 2: TransactionBase rebuild, staticmethod vs classmethod
+- Rebuilt TransactionBase from memory, correctly carried forward Decimal
+  (validation precision) and date type (stronger validation than plain
+  str, converts to string before SQLite storage — same layer-conversion
+  pattern as amount).
+- Added own field_validator to reject amount == 0 — went beyond the
+  original Week 3 schema.
+- Questioned real code's use of @classmethod, believing @staticmethod
+  was more correct since the validator doesn't use cls. TESTED it
+  directly (not just reasoned abstractly) — @staticmethod actually ran
+  fine, caught the zero-amount error correctly.
+- Checked Pydantic's official docs anyway, despite it "working" — found
+  @classmethod is the documented, conventional pattern for field_validator.
+- Key lesson: "it runs without error" and "it's correct/idiomatic" are
+  different questions. Match documented convention even when an
+  alternative technically works — consistency across a codebase matters
+  more than what's minimally sufficient for one specific case.
