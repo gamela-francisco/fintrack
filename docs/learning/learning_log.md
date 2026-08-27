@@ -286,3 +286,11 @@ misconception. Ready for Week 5 full rebuild.
   date's __str__ implementation happening to match ISO format — not
   guaranteed by the method's name or documented intent. Same
   layer-conversion pattern as float(transaction.amount).
+
+## 2026-08-27 — Week 5, Day 3: create_transaction rebuilt
+- Wrote full create_transaction from memory: connection, cursor,
+  amount/date conversions, parametrized INSERT, commit, lastrowid,
+  close, response. Complete and correct on first attempt.
+- Caught own path typo (/transaction vs /transactions) before running —
+  same mistake as Week 1's accidental path mismatch, caught faster
+  this time.
