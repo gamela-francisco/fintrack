@@ -301,3 +301,10 @@ misconception. Ready for Week 5 full rebuild.
   exact string matching on registered paths, zero semantic awareness
   that "/transaction" and "/transactions" are related — same mechanism
   as Week 1's item/items mismatch, just triggered from the other direction.
+- Rebuilt read_all_transactions from memory. Real bug found and confirmed
+  by running it: missing leading space in " AND ..." string concatenation
+  produced invalid SQL (1=1AND...), causing a 500 Internal Server Error —
+  new status code, distinct from 422. Key distinction: 422 = client sent
+  bad data, handled gracefully. 500 = server's own code broke in an
+  unanticipated way, generic message returned to avoid leaking internals.
+  Fixed by restoring the space; confirmed clean 200 afterward.
