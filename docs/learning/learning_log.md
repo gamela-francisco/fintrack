@@ -294,3 +294,10 @@ misconception. Ready for Week 5 full rebuild.
 - Caught own path typo (/transaction vs /transactions) before running —
   same mistake as Week 1's accidental path mismatch, caught faster
   this time.
+- Verified create_transaction end-to-end via curl: valid request →
+  200 with correct stored data; amount=0 → 422 with custom validator
+  message, confirming field_validator is genuinely wired in, not just
+  defined. Resolved own question on path mismatch → 404: FastAPI does
+  exact string matching on registered paths, zero semantic awareness
+  that "/transaction" and "/transactions" are related — same mechanism
+  as Week 1's item/items mismatch, just triggered from the other direction.
