@@ -124,7 +124,7 @@ def create_transaction(transaction: TransactionBase) -> dict:
         "amount": safe_amount,
         "description": transaction.description,
         "category": transaction.category,
-        "date": transaction.date
+        "date": safe_date
     }
 
 @app.delete("/transactions/{transaction_id}")
@@ -134,6 +134,12 @@ def delete_transaction(transaction_id: int) -> dict:
     """
     conn = get_db_connection()
     cursor = conn.cursor()
+
+    # check if the transaction exists first
+    cursor.execute("SELECT id from transactions WHERE id = ?", (transaction_id,))
+    if cursor.fetchone() is None:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Transaction not found")
 
     # execute the SQL delete command targeting the unique ID
     cursor.execute("DELETE FROM transactions WHERE id = ?;", (transaction_id,))
@@ -166,10 +172,11 @@ def update_transaction(transaction_id: int, updated_tx: TransactionBase) -> dict
         SET amount = ?, description = ?, category = ?, date = ?
         WHERE id = ?;
         """,
-        (float(updated_tx.amount), updated_tx.description, updated_tx.category, updated_tx.date, transaction_id)
+        (float(updated_tx.amount), updated_tx.description, updated_tx.category, updated_tx.date.isoformat(), transaction_id)
     )
 
     conn.commit()
     conn.close()
 
     return {"message": f"Transaction {transaction_id} successfully updated"}
+
