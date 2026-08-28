@@ -308,3 +308,26 @@ misconception. Ready for Week 5 full rebuild.
   bad data, handled gracefully. 500 = server's own code broke in an
   unanticipated way, generic message returned to avoid leaking internals.
   Fixed by restoring the space; confirmed clean 200 afterward.
+
+## 2026-08-28 — Week 5, Day 4: delete_transaction rebuilt, 3 real bugs found
+- Wrote delete_transaction from memory. Three real bugs, all caught by
+  actually running the code, not visual review:
+  1. Wrong HTTP method (@app.get instead of @app.delete) — a mutation
+     operation must never be GET.
+  2. Malformed path string — missing closing brace in
+     "/transactions/{transaction_id" — would have failed at startup.
+  3. (transaction_id) is NOT a tuple — parentheses alone don't make a
+     tuple in Python, only the trailing comma does. (5) is just 5;
+     (5,) is a one-element tuple. sqlite3's execute() requires a real
+     sequence as its second argument.
+- Deeper bug found via deliberate testing (not code review): deleting a
+  non-existent ID (9999) returned a false 200 "successfully deleted" —
+  same silent-failure category as Week 1's update_transaction bug.
+  DELETE matching zero rows isn't a SQL error, just does nothing — but
+  the endpoint's response claimed otherwise. Fixed with the same
+  existence-check pattern as update_transaction: SELECT first, raise
+  404 if not found, then DELETE.
+- Confirmed both paths: 9999 → honest 404. Real ID → genuine 200 delete.
+- This endpoint is now more correct than the original audited code —
+  the original delete_transaction never had this existence check either.
+
