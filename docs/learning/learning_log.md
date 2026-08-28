@@ -331,3 +331,31 @@ misconception. Ready for Week 5 full rebuild.
 - This endpoint is now more correct than the original audited code —
   the original delete_transaction never had this existence check either.
 
+## 2026-08-28 — Week 5, Day 4: update_transaction rebuilt, full rebuild complete
+- Wrote update_transaction from memory. Existence-check pattern applied
+  confidently (third use today — delete, then update). One real bug:
+  UPDATE statement was missing the WHERE clause separator, merging
+  "date = ? id = ?" into invalid SQL — SET is for columns to change,
+  WHERE is for targeting the row, two distinct clauses. Also correctly
+  applied .isoformat() to updated_tx.date, consistent with
+  create_transaction.
+- Verified end-to-end: real update confirmed by reading data back
+  (amount 100.0 → 200.0, not just trusting the success message) and
+  9999 ghost update correctly returns 404.
+
+## Week 5 core rebuild: COMPLETE
+All five endpoints (create, read_all, delete, update, plus lifespan and
+TransactionBase) rebuilt from memory, official docs only, zero
+AI-generated code. Real bugs found and fixed at every single endpoint:
+- lifespan: reasoned through fail-fast error handling (original addition)
+- TransactionBase: staticmethod/classmethod investigation, isoformat
+  vs str reasoning (original addition: zero-amount validator)
+- create_transaction: path typo caught before running
+- read_all_transactions: missing space caused 500 error (new status
+  code learned)
+- delete_transaction: 3 bugs (wrong method, malformed path, non-tuple
+  argument) + added missing existence check (improvement over original)
+- update_transaction: missing WHERE clause separator
+Every endpoint verified by real curl requests, not visual review alone.
+Two endpoints (delete, update) are now MORE correct than the original
+audited code — added existence checks that weren't originally as robust.
