@@ -359,3 +359,27 @@ AI-generated code. Real bugs found and fixed at every single endpoint:
 Every endpoint verified by real curl requests, not visual review alone.
 Two endpoints (delete, update) are now MORE correct than the original
 audited code — added existence checks that weren't originally as robust.
+
+## 2026-08-28 — Week 5 mock interview
+- Q1: Full request lifecycle, correct and complete.
+- Q2 (redo needed): Initial answer conflated "SQLite is fast enough" with
+  the actual mechanism. Corrected: def endpoints run in FastAPI's thread
+  pool automatically, keeping the event loop free regardless of how fast
+  or slow the blocking call is.
+- Q3: Correct, with distinction clarified — Pydantic's core job (type
+  validation/conversion) vs. my own added field_validator (zero-amount
+  check) are two separate things, not one.
+- Q4: Correct, matches Week 4 teach-back precisely.
+- Q5 (redo needed): Initial answer was thin ("migrate to Postgres").
+  Redone with real reasoning: PostgreSQL for concurrent writes (SQLite's
+  single-writer file-lock limitation specifically), connection pooling
+  via lifespan (tied to Week 5's own lifespan understanding), pagination,
+  and indexing on date/category for read performance. Honestly flagged
+  own gap: same-row concurrent writes still an open question.
+
+## GROUND ZERO CURRICULUM: COMPLETE
+Weeks 1-5 all passed. Full FinTrack core rebuilt from memory, verified
+by execution, with real bugs found and fixed throughout — several
+endpoints now more correct than the original AI-assisted code. Ready
+to proceed to Phase 2: PostgreSQL, Anthropic API integration, Railway
+deployment, polish — per docs/roadmap.md.
