@@ -383,3 +383,20 @@ by execution, with real bugs found and fixed throughout — several
 endpoints now more correct than the original AI-assisted code. Ready
 to proceed to Phase 2: PostgreSQL, Anthropic API integration, Railway
 deployment, polish — per docs/roadmap.md.
+
+## 2026-08-31 — Phase 2 prep: PostgreSQL installed locally
+- Installed Homebrew (wasn't present), then postgresql@16 via brew.
+- Started as a background service (brew services start postgresql@16) —
+  runs persistently, unlike uvicorn which needs manual start each session.
+- Verified connection via psql postgres — reached interactive shell
+  successfully.
+- Noted: default install uses "trust" authentication for local
+  connections (no password required) — fine for local dev, would need
+  proper auth for any real deployment. Same category as CORS
+  allow_origins=["*"] — a dev-only default to remember, not fix now.
+- Decision: developing against local Postgres first, Railway deployment
+  (with its own separately-provisioned Postgres instance) comes later,
+  as a distinct Tier 2 step — not conflating "learn Postgres" with
+  "deploy to Railway."
+- No FinTrack code touched today — Phase 2 proper starts tomorrow,
+  1 Sept, per roadmap.md.
