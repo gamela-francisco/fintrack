@@ -410,3 +410,19 @@ deployment, polish — per docs/roadmap.md.
 - Placeholder syntax differs: SQLite uses ?, psycopg/Postgres uses %s —
   same underlying purpose (safe parametrized queries, data sent
   separately from query structure), different syntax per library.
+
+## 2026-09-01 — Phase 2, Day 1: first psycopg script, verified end-to-end
+- Installed psycopg[binary] in venv, confirmed correct location via
+  pip show. Wrote first psycopg script from memory/docs: connect,
+  create table, 3 parametrized inserts, verified via separate psql
+  query — all 3 rows correctly stored, correctly ordered.
+- Self-caught bugs before running: missing comma in CREATE TABLE
+  (same category as last week's SQL syntax bugs), and a column-order
+  mismatch in INSERT statements — correctly reasoned that %s fills
+  positionally, not by name, same rule as SQLite's ?.
+- Independently adopted `with` context managers (not prompted) to solve
+  connection-cleanup — same underlying principle as lifespan's
+  guaranteed setup/teardown, just applied per-connection instead of
+  per-app-lifetime. Real transfer of a known Python pattern to new code.
+- Minor PATH confusion: psql unavailable in one terminal tab, worked
+  fine in another — per-session PATH issue, not a broken install.
