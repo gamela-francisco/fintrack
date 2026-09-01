@@ -400,3 +400,13 @@ deployment, polish — per docs/roadmap.md.
   "deploy to Railway."
 - No FinTrack code touched today — Phase 2 proper starts tomorrow,
   1 Sept, per roadmap.md.
+
+## 2026-09-01 — Phase 2, Day 1: psycopg first exposure
+- SQLite: embedded, file-based — connecting just means pointing at a
+  file on disk. PostgreSQL: client-server — connecting requires host,
+  port, username, password, and a database NAME (not a file — Postgres
+  manages named databases within a running server process, distinct
+  from SQLite's "database = file" model).
+- Placeholder syntax differs: SQLite uses ?, psycopg/Postgres uses %s —
+  same underlying purpose (safe parametrized queries, data sent
+  separately from query structure), different syntax per library.
