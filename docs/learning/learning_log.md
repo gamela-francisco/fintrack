@@ -426,3 +426,13 @@ deployment, polish — per docs/roadmap.md.
   per-app-lifetime. Real transfer of a known Python pattern to new code.
 - Minor PATH confusion: psql unavailable in one terminal tab, worked
   fine in another — per-session PATH issue, not a broken install.
+
+- get_db_connection migrated to psycopg: from psycopg.rows import dict_row,
+  passed as row_factory=dict_row directly to psycopg.connect() — different
+  pattern from SQLite (which set row_factory AFTER connecting, on the
+  conn object). Verified via real query against scratch_users: confirmed
+  genuine dict-style rows returned ({'id': 1, 'name': 'Alice', 'age': 30}),
+  not plain tuples.
+- Corrected stale docstring — old version said "SQLite database file",
+  now inaccurate given psycopg connects to a client-server database,
+  not a file.

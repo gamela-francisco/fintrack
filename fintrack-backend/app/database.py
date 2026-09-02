@@ -1,15 +1,16 @@
-import sqlite3
+import psycopg
+from psycopg.rows import dict_row
 
-DB_FILE = "fintrack.db"
 
 def get_db_connection():
     """
-    Opens a connection to the SQLite database file.
+    Opens a connection to the PostgreSQL database server.
     """
-    conn = sqlite3.connect(DB_FILE)
-    # This setting tells sqlite3 to return rows as dictionaries
-    # instead of tuples, making it much easier to convert to JSON later
-    conn.row_factory = sqlite3.Row
+    conn = psycopg.connect(
+        dbname="fintrack",
+        user="gamel",
+        row_factory=dict_row
+    )
     return conn
 
 def init_db():
