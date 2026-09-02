@@ -436,3 +436,13 @@ deployment, polish — per docs/roadmap.md.
 - Corrected stale docstring — old version said "SQLite database file",
   now inaccurate given psycopg connects to a client-server database,
   not a file.
+- init_db migrated to psycopg, real DECIMAL/numeric column for amount
+  (Postgres has native decimal support, unlike SQLite) — verified table
+  structure via psql \d transactions.
+- Open question for tomorrow: should float(transaction.amount) be
+  removed from create_transaction/update_transaction now that Decimal
+  can be stored natively? Answer: yes, in principle — but need to verify
+  psycopg actually accepts Python Decimal objects directly in parameterized
+  queries before removing the conversion. Also check: does Postgres have
+  a native DATE type, closing the same gap for dates that DECIMAL just
+  closed for amounts?
