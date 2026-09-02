@@ -15,20 +15,14 @@ def get_db_connection():
 
 def init_db():
     """ Creates the transactions table if it doesn't exist yet."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        amount REAL NOT NULL,
-        description TEXT NOT NULL,
-        category TEXT NOT NULL,
-        date TEXT NOT NULL
-        );
-    """)
-
-
-    # Commit save the changes permanently to the file
-    conn.commit()
-    conn.close()
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS transactions (
+                id SERIAL PRIMARY KEY,
+                amount DECIMAL NOT NULL,
+                description TEXT NOT NULL,
+                category TEXT NOT NULL,
+                date TEXT NOT NULL
+                );
+            """)

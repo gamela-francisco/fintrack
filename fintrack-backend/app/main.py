@@ -104,14 +104,14 @@ def create_transaction(transaction: TransactionBase) -> dict:
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    safe_amount = float(transaction.amount)
-    safe_date = transaction.date.isoformat
+
+    safe_date = transaction.date.isoformat()
 
     # execute the SQL command to insert our data rows securely
     cursor.execute("""
         INSERT INTO transactions (amount, description, category, date)
         VALUES (?, ?, ?, ?);
-    """, (safe_amount, transaction.description, transaction.category, safe_date))
+    """, (transaction.amount, transaction.description, transaction.category, safe_date))
 
     # commit saves the row, and cursor.lastrowid grabs the new ID assigned by SQLite
     conn.commit()
@@ -121,7 +121,7 @@ def create_transaction(transaction: TransactionBase) -> dict:
     # return the exact saved record object back to the frontend
     return {
         "id": new_id,
-        "amount": safe_amount,
+        "amount": transaction.amount,
         "description": transaction.description,
         "category": transaction.category,
         "date": safe_date
@@ -172,7 +172,7 @@ def update_transaction(transaction_id: int, updated_tx: TransactionBase) -> dict
         SET amount = ?, description = ?, category = ?, date = ?
         WHERE id = ?;
         """,
-        (float(updated_tx.amount), updated_tx.description, updated_tx.category, updated_tx.date.isoformat(), transaction_id)
+        (updated_tx.amount, updated_tx.description, updated_tx.category, updated_tx.date.isoformat(), transaction_id)
     )
 
     conn.commit()
