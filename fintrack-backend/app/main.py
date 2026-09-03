@@ -110,12 +110,13 @@ def create_transaction(transaction: TransactionBase) -> dict:
     # execute the SQL command to insert our data rows securely
     cursor.execute("""
         INSERT INTO transactions (amount, description, category, date)
-        VALUES (%s, %s, %s, %s);
+        VALUES (%s, %s, %s, %s)
+        RETURNING id;
     """, (transaction.amount, transaction.description, transaction.category, transaction.date))
 
-    # commit saves the row, and cursor.lastrowid grabs the new ID assigned by SQLite
+
+    new_id = cursor.fetchone()["id"]
     conn.commit()
-    new_id = cursor.lastrowid
     conn.close()
 
     # return the exact saved record object back to the frontend
