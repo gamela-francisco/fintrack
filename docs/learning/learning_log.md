@@ -446,3 +446,33 @@ deployment, polish — per docs/roadmap.md.
   queries before removing the conversion. Also check: does Postgres have
   a native DATE type, closing the same gap for dates that DECIMAL just
   closed for amounts?
+
+
+## 2026-09-03 — Phase 2, Day 3: PostgreSQL migration complete, CRUD verified
+- Replaced all SQLite ? placeholders with psycopg %s across all
+endpoints (create, read_all, delete, update) and dynamic filters in
+read_all_transactions.
+- Removed float(transaction.amount) and transaction.date.isoformat()
+from create_transaction and update_transaction — psycopg accepts Python
+Decimal and date objects directly via type adapters, confirmed by
+test inserting Decimal("10.00") and date(2026,9,3) which returned
+as Decimal('10.00') and datetime.date(2026,9,3).
+- Fixed create_transaction to use RETURNING id instead of
+cursor.lastrowid (SQLite-only). New pattern: execute INSERT with
+RETURNING, fetchone()["id"] before commit.
+- Hit KeyError: 0 in get_financial_summary — psycopg's dict_row makes
+fetchone() return dict-like, not tuple. Fixed by aliasing SUM(amount)
+as total and accessing income_row["total"] / expense_row["total"].
+- Also changed fallback for NULL sums from 0.0 to Decimal("0.00") to
+avoid mixing Decimal and float (would raise TypeError on addition).
+- Summary endpoint now returns correct values, but expenses are negative
+sums (since expenses stored as negative amounts). Leaving as-is for
+personal use; can document later.
+- Learned why amounts appear as JSON strings: JSON has only one numeric
+type (double-precision float), so FastAPI/Pydantic serialises Decimal
+as string to preserve precision. Need to refine full interview answer
+tomorrow (still fuzzy on client trade-off).
+- Cleaned up stale docstrings/comments (SQLite → PostgreSQL, removed
+float conversion comment).
+- All CRUD + summary tested with curl: create, read, update, delete, and
+summary all return 200 with correct data. No remaining runtime errors.
