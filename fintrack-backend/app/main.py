@@ -13,7 +13,7 @@ from app.database import get_db_connection
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # This block runs BEFORE the server starts accepting requests
-    print("Initialising SQLite Database...")
+    print("Initialising PostgreSQl Database...")
     init_db()
     yield
     # Anything after the 'yield' would run when the server shuts down
@@ -78,12 +78,12 @@ def read_all_transactions(search: Optional[str] = None, category: Optional[str] 
 
     # If the user typed something into the search bar
     if search:
-        query += " AND LOWER(description) LIKE LOWER(?)"
+        query += " AND LOWER(description) LIKE LOWER(%s)"
         params.append(f"%{search}%")  # The '%' wildcards mean "contains this text"
 
     # If the user selected or passed a specific category filter
     if category:
-        query += " AND LOWER(category) = LOWER(?)"
+        query += " AND LOWER(category) = LOWER(%s)"
         params.append(category)
 
     query += ";"
@@ -105,13 +105,13 @@ def create_transaction(transaction: TransactionBase) -> dict:
     cursor = conn.cursor()
 
 
-    safe_date = transaction.date.isoformat()
+
 
     # execute the SQL command to insert our data rows securely
     cursor.execute("""
         INSERT INTO transactions (amount, description, category, date)
-        VALUES (?, ?, ?, ?);
-    """, (transaction.amount, transaction.description, transaction.category, safe_date))
+        VALUES (%s, %s, %s, %s);
+    """, (transaction.amount, transaction.description, transaction.category, transaction.date))
 
     # commit saves the row, and cursor.lastrowid grabs the new ID assigned by SQLite
     conn.commit()
@@ -124,7 +124,7 @@ def create_transaction(transaction: TransactionBase) -> dict:
         "amount": transaction.amount,
         "description": transaction.description,
         "category": transaction.category,
-        "date": safe_date
+        "date": transaction.date
     }
 
 @app.delete("/transactions/{transaction_id}")
@@ -136,13 +136,13 @@ def delete_transaction(transaction_id: int) -> dict:
     cursor = conn.cursor()
 
     # check if the transaction exists first
-    cursor.execute("SELECT id from transactions WHERE id = ?", (transaction_id,))
+    cursor.execute("SELECT id from transactions WHERE id = %s", (transaction_id,))
     if cursor.fetchone() is None:
         conn.close()
         raise HTTPException(status_code=404, detail="Transaction not found")
 
     # execute the SQL delete command targeting the unique ID
-    cursor.execute("DELETE FROM transactions WHERE id = ?;", (transaction_id,))
+    cursor.execute("DELETE FROM transactions WHERE id = %s;", (transaction_id,))
 
     conn.commit()
     conn.close()
@@ -158,7 +158,7 @@ def update_transaction(transaction_id: int, updated_tx: TransactionBase) -> dict
     cursor = conn.cursor()
 
     # Step A: Check if the transaction actually exists first
-    cursor.execute("SELECT id FROM transactions WHERE id = ?;", (transaction_id,))
+    cursor.execute("SELECT id FROM transactions WHERE id = %s;", (transaction_id,))
     if cursor.fetchone() is None:
         conn.close()
         # FastAPI automatically handles HTTP exceptions elegantly
@@ -169,10 +169,10 @@ def update_transaction(transaction_id: int, updated_tx: TransactionBase) -> dict
     cursor.execute(
         """
         UPDATE transactions 
-        SET amount = ?, description = ?, category = ?, date = ?
-        WHERE id = ?;
+        SET amount = %s, description = %s, category = %s, date = %s
+        WHERE id = %s;
         """,
-        (updated_tx.amount, updated_tx.description, updated_tx.category, updated_tx.date.isoformat(), transaction_id)
+        (updated_tx.amount, updated_tx.description, updated_tx.category, updated_tx.date, transaction_id)
     )
 
     conn.commit()
