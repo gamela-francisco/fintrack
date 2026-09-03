@@ -23,6 +23,6 @@ def init_db():
                 amount DECIMAL NOT NULL,
                 description TEXT NOT NULL,
                 category TEXT NOT NULL,
-                date TEXT NOT NULL
+                date DATE NOT NULL
                 );
             """)
