@@ -476,3 +476,36 @@ tomorrow (still fuzzy on client trade-off).
 float conversion comment).
 - All CRUD + summary tested with curl: create, read, update, delete, and
 summary all return 200 with correct data. No remaining runtime errors.
+
+## 2026-09-09 — Phase 2, Day 4: async fundamentals + first AI service (Ollama)
+- Deepened thread/process understanding: process is a running program with its own memory; 
+  threads are paths of execution inside the process that share memory. 
+  Threads are lighter but need careful coordination.
+
+- Event loop is single-threaded because creating many threads is expensive. 
+It switches between tasks while waiting for I/O — perfect for many slow 
+network/disk operations, not for CPU-heavy work.
+
+- Blocking vs non-blocking operations: blocking functions (`requests.get`, `time.sleep`, `cursor.execute`) 
+don't return control to the event loop until finished. Non-blocking functions (`httpx.AsyncClient.get`, 
+`asyncio.sleep`) are awaited and yield control, letting the event loop run other tasks.
+
+- Why `requests.get` is safe in `def` endpoints: FastAPI runs `def` in a thread pool, so blocking only 
+blocks a worker thread, not the event loop. In `async def`, blocking would freeze the whole server.
+
+- How to tell if a function is blocking: async library functions need `await` (non-blocking); 
+plain functions that just run are usually blocking.
+
+- Installed Ollama via Homebrew, started as background service, pulled `llama3.2`. Tested with curl: returned 
+`"Purchase"` for "Coffee at Starbucks".
+- Built `app/categorizer.py` with `OllamaCategorizer.categorize(description) -> str`. Uses 
+`httpx.AsyncClient(timeout=30.0)` to POST to `{base_url}/api/generate`. Loads `LLM_BASE_URL` and `LLM_MODEL` from `.env` 
+via `load_dotenv()`. Prompt asks for single category word. Handles response with `raise_for_status()` and strips whitespace.
+Tested with `test_categorizer.py`: returned "beverage" for "Coffee at Starbucks". Async external API call works end-to-end from Python.
+- Environment variables: `.env` file (gitignored) holds config like `LLM_BASE_URL`; python-dotenv loads it. In Railway, 
+set env vars in dashboard — no need to edit lifespan.
+- Open question for next session: how to structure the categorizer so swapping Ollama for Anthropic later is minimal (likely an abstract base class or protocol).
+Interview-likely topics flagged today:
+  - "Why did you use httpx.AsyncClient instead of requests?" — because categorisation endpoint will be async def; requests is blocking and would freeze the event loop, while httpx.AsyncClient is non-blocking.
+  - "What's the difference between a process and a thread?" — process has own memory; threads share memory within a process.
+  - "How do you keep API keys or config out of code?" — environment variables, loaded via dotenv locally and platform dashboard in production.
