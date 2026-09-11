@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException
-from typing import List
 from typing import List, Optional
 from starlette.middleware.cors import CORSMiddleware
 from decimal import Decimal
@@ -8,6 +7,11 @@ from app.schemas import TransactionBase
 from contextlib import asynccontextmanager
 from app.database import init_db
 from app.database import get_db_connection
+
+from app.categorizer import OllamaCategorizer
+categorizer = OllamaCategorizer()
+
+import httpx
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -179,3 +183,31 @@ def update_transaction(transaction_id: int, updated_tx: TransactionBase) -> dict
 
     return {"message": f"Transaction {transaction_id} successfully updated"}
 
+@app.post("/transactions/{transaction_id}/categorize")
+async def categorize_transaction(transaction_id: int) -> dict:
+    conn = get_db_connection()
+
+    # Open connection
+    try:
+        cursor = conn.cursor()
+        # fetch one row
+        cursor.execute(
+            "SELECT * FROM transactions WHERE id = %s", (transaction_id,)
+        )
+        row = cursor.fetchone()
+        # if not found -> raise
+        if row is None:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+        try:
+            category = await categorizer.categorize(row["description"])
+        except (httpx.RequestError, httpx.HTTPStatusError):
+            raise HTTPException(status_code=502, detail="AI service unavailable")
+
+        cursor.execute("UPDATE transactions SET category = %s WHERE id = %s", (category, transaction_id))
+        cursor.execute("SELECT * FROM transactions where id = %s", (transaction_id,))
+        updated_row = cursor.fetchone()
+
+        conn.commit()
+        return dict(updated_row)
+    finally:
+        conn.close()
