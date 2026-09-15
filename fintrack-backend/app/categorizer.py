@@ -4,8 +4,15 @@ load_dotenv()
 import os
 import httpx
 
+from abc import ABC, abstractmethod
 
-class OllamaCategorizer:
+class BaseCategorizer(ABC):
+    @abstractmethod
+    async def categorize(self, description: str) -> str:
+        ...
+
+
+class OllamaCategorizer(BaseCategorizer):
     async def categorize(self, description: str) -> str:
         base_url = os.getenv("LLM_BASE_URL", "http://localhost:11434")
         base_url = base_url.rstrip("/")
@@ -29,3 +36,9 @@ class OllamaCategorizer:
             data = response.json()
             category = data.get("response", "").strip()
             return category
+
+def make_categorizer() -> BaseCategorizer:
+    provider = os.getenv("LLM_PROVIDER", "ollama").lower()
+    if provider == "ollama":
+        return OllamaCategorizer()
+    raise ValueError(f"Unknown LLM_PROVIDER: {provider}")

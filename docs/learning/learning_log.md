@@ -509,3 +509,64 @@ Interview-likely topics flagged today:
   - "Why did you use httpx.AsyncClient instead of requests?" — because categorisation endpoint will be async def; requests is blocking and would freeze the event loop, while httpx.AsyncClient is non-blocking.
   - "What's the difference between a process and a thread?" — process has own memory; threads share memory within a process.
   - "How do you keep API keys or config out of code?" — environment variables, loaded via dotenv locally and platform dashboard in production.
+
+
+## 2026-09-11 — Phase 2, Day 5: categorisation endpoint completed and verified end-to-end
+
+- Finished `POST /transactions/{transaction_id}/categorize`:
+  
+  - Added `import httpx` and `categorizer = OllamaCategorizer()` at module
+  level in `main.py`.
+  - Added `UPDATE transactions SET category = %s WHERE id = %s` after the
+  categorizer call, before commit.
+  - Added re-fetch after UPDATE to return current state, not stale `row`.
+
+- Retrieval check on re-fetch reasoning: `row` was fetched before the
+UPDATE, so returning it directly would show the old category (or None).
+Re-fetching after UPDATE within the same transaction sees the new value,
+because the connection's own writes are visible to itself.
+
+- Tested end-to-end:
+
+- Created transaction id=5, "Coffee at Starbucks", category "Uncategorised".
+- Called `POST /transactions/5/categorize`.
+- Verified via `psql fintrack -c "SELECT id, description, category FROM transactions WHERE id = 5;"` 
+- category was updated to "Beverage".
+
+- Full loop confirmed working: FastAPI endpoint → async httpx call to Ollama
+→ PostgreSQL UPDATE → verified directly in psql. Tier 1 AI categorisation
+feature is now functionally complete.
+
+- Yesterday's deep-dive (10 Sept) understanding now applied:
+
+  - Why instantiate OllamaCategorizer rather than use staticmethod —
+  instance can carry config and be swapped for another provider later.
+  - await suspends the coroutine and returns control to the event loop;
+  it does NOT pause the thread. Corrected my earlier mistaken idea that
+  await "pauses the main thread" — that would defeat the entire point
+  of async.
+  
+- Honest gap flagged: main.py still hardcodes OllamaCategorizer().
+  The provider abstraction (base class or factory driven by LLM_PROVIDER
+  env var) does not exist yet — next session.
+
+- Open questions for next session:
+
+  - How to structure a BaseCategorizer so swapping Ollama → Anthropic
+  is a config change, not a rewrite.
+  - Whether to add a Tier 1 teach-back on the categorisation feature
+  before moving on (cold, no notes).
+
+- Interview-likely topics flagged today:
+
+  - "Why is the categorise endpoint async def and not def?" — because
+  it awaits an async HTTP call; using def would still work but would
+  occupy a thread pool worker unnecessarily for the duration of the AI
+  call.
+  - "Why do you re-fetch after UPDATE instead of returning the pre-UPDATE
+  row?" — the pre-UPDATE row is stale; re-fetching returns the current
+  persisted state. Within a single transaction, the connection sees its
+  own writes.
+  - "How does your endpoint handle an AI service failure?" — catches
+httpx.RequestError / httpx.HTTPStatusError and converts to a 502,
+leaving the transaction unchanged.

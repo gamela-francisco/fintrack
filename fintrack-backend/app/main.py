@@ -8,8 +8,8 @@ from contextlib import asynccontextmanager
 from app.database import init_db
 from app.database import get_db_connection
 
-from app.categorizer import OllamaCategorizer
-categorizer = OllamaCategorizer()
+from app.categorizer import make_categorizer
+categorizer = make_categorizer()
 
 import httpx
 
